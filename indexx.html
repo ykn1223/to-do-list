@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next-Gen To-Do List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Base font and background for light mode */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* A softer, more modern gradient background for light mode */
+            @apply bg-gradient-to-br from-rose-50 via-fuchsia-50 to-emerald-50 text-gray-800;
+        }
+
+        /* Dark mode body styles - applied when 'dark' class is on html element */
+        html.dark body {
+            @apply bg-gradient-to-br from-slate-900 via-zinc-900 to-neutral-900 text-gray-100;
+        }
+
+        /* Custom scrollbar for task list - refined for new gen look */
+        .task-list-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .task-list-container::-webkit-scrollbar-track {
+            background: #f0f4f8; /* Very light, subtle track for light mode */
+            border-radius: 10px;
+        }
+        html.dark .task-list-container::-webkit-scrollbar-track {
+            background: #2d3748; /* Darker track for dark mode */
+        }
+        .task-list-container::-webkit-scrollbar-thumb {
+            background: #a78bfa; /* Soft purple thumb for light mode */
+            border-radius: 10px;
+        }
+        html.dark .task-list-container::-webkit-scrollbar-thumb {
+            background: #667eea; /* Indigo for dark mode scrollbar */
+        }
+        .task-list-container::-webkit-scrollbar-thumb:hover {
+            background: #8b5cf6; /* Slightly darker purple on hover (light mode) */
+        }
+        html.dark .task-list-container::-webkit-scrollbar-thumb:hover {
+            background: #5a67d8; /* Slightly darker indigo on hover (dark mode) */
+        }
+
+        /* Keyframe for subtle bounce animation on button click */
+        @keyframes bounce-once {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-once {
+            animation: bounce-once 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <header class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white p-4 shadow-xl">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center py-2">
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-2 sm:mb-0 tracking-tight">
+                <span class="bg-white text-indigo-600 px-3 py-1 rounded-lg shadow-md inline-block transform hover:scale-105 transition duration-300">Pro</span>
+                <span class="ml-2">To-Do</span>
+            </h1>
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition duration-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                    <svg id="sunIcon" class="w-6 h-6 text-yellow-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 00-.707-.293h-1.414a1 1 0 100 2h1.414a1 1 0 00.707-.293 1 1 0 000-1.414zM10 15a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4 0a1 1 0 00-.707.293l-.707.707a1 1 0 101.414 1.414l.707-.707A1 1 0 005 15zm-3.536-1.464a1 1 0 00-.293.707v1.414a1 1 0 102 0v-1.414a1 1 0 00-.293-.707 1 1 0 00-1.414 0z"></path>
+                    </svg>
+                    <svg id="moonIcon" class="w-6 h-6 text-indigo-200 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                </button>
+                </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto p-4 md:p-8 flex flex-col items-center">
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-2xl shadow-xl dark:shadow-none max-w-2xl w-full mb-8 text-center border border-gray-100 dark:border-gray-700">
+            <h2 class="text-2xl md:text-3xl font-semibold text-gray-700 dark:text-gray-200 mb-4 tracking-tight">Daily Inspiration</h2>
+            <p id="motivationalQuote" class="text-xl italic text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">"The only way to do great work is to love what you do." - Steve Jobs</p>
+            <button id="newQuoteButton"
+                    class="bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white font-bold py-2 px-6 rounded-full shadow-lg
+                           transition duration-300 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-purple-300 focus:ring-opacity-75">
+                Get New Quote
+            </button>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-2xl shadow-xl dark:shadow-none max-w-2xl w-full mb-8 border border-gray-100 dark:border-gray-700">
+            <h2 class="text-2xl md:text-3xl font-semibold text-gray-700 dark:text-gray-200 mb-6 text-center tracking-tight">Add New Task</h2>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input type="text" id="newTaskInput" placeholder="What's on your mind today?"
+                       class="flex-grow p-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 text-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100">
+                <button id="addTaskButton"
+                        class="bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg
+                               transition duration-300 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-75">
+                    Add Task
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-2xl shadow-xl dark:shadow-none max-w-2xl w-full border border-gray-100 dark:border-gray-700">
+            <h2 class="text-2xl md:text-3xl font-semibold text-gray-700 dark:text-gray-200 mb-6 text-center tracking-tight">Your Tasks</h2>
+
+            <div class="flex justify-center space-x-3 mb-6">
+                <button id="filterAll" class="filter-button px-5 py-2 rounded-full text-sm font-medium transition duration-200 bg-indigo-500 dark:bg-indigo-600 text-white shadow-md hover:bg-indigo-600 dark:hover:bg-indigo-700">All</button>
+                <button id="filterActive" class="filter-button px-5 py-2 rounded-full text-sm font-medium transition duration-200 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">Active</button>
+                <button id="filterCompleted" class="filter-button px-5 py-2 rounded-full text-sm font-medium transition duration-200 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">Completed</button>
+            </div>
+
+            <div id="taskList" class="space-y-4 task-list-container max-h-96 overflow-y-auto pr-2">
+                </div>
+            <p id="noTasksMessage" class="text-center text-gray-500 dark:text-gray-400 mt-4 hidden py-8">No tasks here! Time to add some new goals. 🎉</p>
+
+            <div class="flex justify-center mt-6">
+                <button id="clearCompletedButton"
+                        class="bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-md
+                               transition duration-300 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-red-300 focus:ring-opacity-75">
+                    Clear Completed
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <div id="confirmationModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl dark:shadow-none max-w-sm w-full text-center transform scale-95 opacity-0 transition-all duration-300 ease-out border border-gray-100 dark:border-gray-700">
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100" id="modalMessage">Are you sure?</h3>
+            <div class="flex justify-center space-x-4">
+                <button id="confirmYes" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg transition duration-300 transform hover:scale-105">Yes</button>
+                <button id="confirmNo" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-5 rounded-lg transition duration-300 transform hover:scale-105">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editTaskModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl dark:shadow-none max-w-md w-full transform scale-95 opacity-0 transition-all duration-300 ease-out border border-gray-100 dark:border-gray-700">
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Edit Task</h3>
+            <input type="text" id="editTaskInput" class="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-lg shadow-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100">
+            <div class="flex justify-end space-x-4">
+                <button id="saveEditButton" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg transition duration-300 transform hover:scale-105">Save Changes</button>
+                <button id="cancelEditButton" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-5 rounded-lg transition duration-300 transform hover:scale-105">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 dark:bg-gray-900 text-white p-6 mt-8 rounded-t-2xl shadow-inner">
+        <div class="container mx-auto text-center opacity-90">
+            <p>&copy; <span id="currentYear"></span> Next-Gen To-Do App. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables for tasks (now purely in-memory)
+        let allTasks = []; // Store all tasks
+        let currentFilter = 'all'; // 'all', 'active', 'completed'
+
+        // DOM elements
+        const newTaskInput = document.getElementById('newTaskInput');
+        const addTaskButton = document.getElementById('addTaskButton');
+        const taskList = document.getElementById('taskList');
+        const noTasksMessage = document.getElementById('noTasksMessage'); // Removed loadingMessage
+        const motivationalQuoteElement = document.getElementById('motivationalQuote');
+        const newQuoteButton = document.getElementById('newQuoteButton');
+
+        const confirmationModal = document.getElementById('confirmationModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+
+        const editTaskModal = document.getElementById('editTaskModal');
+        const editTaskInput = document.getElementById('editTaskInput');
+        const saveEditButton = document.getElementById('saveEditButton');
+        const cancelEditButton = document.getElementById('cancelEditButton');
+        let currentEditTaskId = null; // To store the ID of the task being edited
+
+        const filterButtons = document.querySelectorAll('.filter-button');
+        const clearCompletedButton = document.getElementById('clearCompletedButton');
+
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+
+        // Motivational Quotes
+        const motivationalQuotes = [
+            "The best way to predict the future is to create it. - Peter Drucker",
+            "The only way to do great work is to love what you do. - Steve Jobs",
+            "Believe you can and you're halfway there. - Theodore Roosevelt",
+            "It always seems impossible until it's done. - Nelson Mandela",
+            "Success is not final, failure is not fatal: it is the courage to continue that counts. - Winston Churchill",
+            "Your limitation—it's only your imagination.",
+            "Push yourself, because no one else is going to do it for you.",
+            "Great things never come from comfort zones.",
+            "Dream it. Wish it. Do it.",
+            "The harder you work for something, the greater you'll feel when you achieve it.",
+            "Don't stop when you're tired. Stop when you're done.",
+            "Wake up with determination. Go to bed with satisfaction.",
+            "Do something today that your future self will thank you for.",
+            "Little things make big days.",
+            "It's not about perfect. It's about effort. And when you bring that effort every single day, that's where transformation happens. That's how change occurs."
+        ];
+
+        // Function to display a random motivational quote
+        function displayRandomQuote() {
+            const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+            motivationalQuoteElement.textContent = motivationalQuotes[randomIndex];
+        }
+
+        // Function to show custom confirmation modal
+        function showConfirmationModal(message, onConfirm) {
+            modalMessage.textContent = message;
+            confirmationModal.classList.remove('hidden');
+            // Animate modal in
+            setTimeout(() => {
+                confirmationModal.querySelector('div').classList.remove('scale-95', 'opacity-0');
+                confirmationModal.querySelector('div').classList.add('scale-100', 'opacity-100');
+            }, 10); // Small delay to ensure hidden is applied first
+
+            const handleYes = () => {
+                // Animate modal out
+                confirmationModal.querySelector('div').classList.remove('scale-100', 'opacity-100');
+                confirmationModal.querySelector('div').classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    onConfirm(true);
+                    confirmationModal.classList.add('hidden');
+                    confirmYes.removeEventListener('click', handleYes);
+                    confirmNo.removeEventListener('click', handleNo);
+                }, 300); // Wait for animation to finish
+            };
+
+            const handleNo = () => {
+                // Animate modal out
+                confirmationModal.querySelector('div').classList.remove('scale-100', 'opacity-100');
+                confirmationModal.querySelector('div').classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    onConfirm(false);
+                    confirmationModal.classList.add('hidden');
+                    confirmYes.removeEventListener('click', handleYes);
+                    confirmNo.removeEventListener('click', handleNo);
+                }, 300); // Wait for animation to finish
+            };
+
+            confirmYes.addEventListener('click', handleYes);
+            confirmNo.addEventListener('click', handleNo);
+        }
+
+        // Function to apply the theme (light or dark)
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Initialize on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set the current year in the footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+            // Display an initial random quote
+            displayRandomQuote();
+
+            // Apply saved theme or default to light
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(savedTheme);
+
+            // Initial render of tasks (will be empty)
+            renderTasks();
+        });
+
+        // Function to add a new task
+        addTaskButton.addEventListener('click', () => {
+            const taskText = newTaskInput.value.trim();
+            if (taskText === "") {
+                showConfirmationModal("Task cannot be empty!", (confirmed) => {});
+                return;
+            }
+
+            // Generate a unique ID for the task (using timestamp for simplicity)
+            const newTaskId = Date.now().toString();
+            allTasks.push({
+                id: newTaskId,
+                text: taskText,
+                completed: false,
+                createdAt: Date.now() // Add creation timestamp for sorting
+            });
+            newTaskInput.value = '';
+            addTaskButton.classList.add('animate-bounce-once'); // Add animation class
+            setTimeout(() => {
+                addTaskButton.classList.remove('animate-bounce-once'); // Remove after animation
+            }, 300);
+
+            renderTasks(); // Re-render the list after adding
+        });
+
+        // Function to render tasks to the UI based on the current filter
+        function renderTasks() {
+            taskList.innerHTML = ''; // Clear existing tasks
+            // loadingMessage.classList.add('hidden'); // Removed loading message
+
+            let filteredTasks = [];
+            if (currentFilter === 'active') {
+                filteredTasks = allTasks.filter(task => !task.completed);
+            } else if (currentFilter === 'completed') {
+                filteredTasks = allTasks.filter(task => task.completed);
+            } else { // 'all'
+                filteredTasks = allTasks;
+            }
+
+            if (filteredTasks.length === 0) {
+                noTasksMessage.classList.remove('hidden');
+                return;
+            } else {
+                noTasksMessage.classList.add('hidden');
+            }
+
+            // Sort tasks by creation date (newest first), then completed tasks at the bottom
+            filteredTasks.sort((a, b) => {
+                if (a.completed === b.completed) {
+                    return b.createdAt - a.createdAt; // Newest first for same completion status
+                }
+                return a.completed ? 1 : -1; // Completed tasks come after uncompleted
+            });
+
+            filteredTasks.forEach(task => {
+                const taskItem = document.createElement('div');
+                taskItem.className = `flex items-center justify-between p-4 rounded-xl shadow-sm
+                                     bg-blue-50 dark:bg-gray-700 border-l-4 border-indigo-400 dark:border-indigo-500
+                                     ${task.completed ? 'bg-green-50 dark:bg-gray-700 border-green-400 dark:border-green-500' : ''}
+                                     transition duration-300 ease-in-out transform hover:scale-[1.01] hover:shadow-md`;
+
+                const taskTextElement = document.createElement('span');
+                taskTextElement.className = `flex-grow text-lg text-gray-800 dark:text-gray-100 ${task.completed ? 'line-through text-gray-500 dark:text-gray-400' : ''}`;
+                taskTextElement.textContent = task.text;
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'flex space-x-2 ml-4';
+
+                // Edit button
+                const editButton = document.createElement('button');
+                editButton.className = `p-2 rounded-full bg-yellow-400 hover:bg-yellow-500 text-white transition duration-200 transform hover:scale-110`;
+                editButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
+                editButton.title = 'Edit Task';
+                editButton.addEventListener('click', () => {
+                    currentEditTaskId = task.id;
+                    editTaskInput.value = task.text;
+                    editTaskModal.classList.remove('hidden');
+                    // Animate modal in
+                    setTimeout(() => {
+                        editTaskModal.querySelector('div').classList.remove('scale-95', 'opacity-0');
+                        editTaskModal.querySelector('div').classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                });
+
+                // Complete/Uncomplete button
+                const toggleButton = document.createElement('button');
+                toggleButton.className = `p-2 rounded-full transition duration-200 transform hover:scale-110
+                                          ${task.completed ? 'bg-orange-400 hover:bg-orange-500 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}`;
+                toggleButton.title = task.completed ? 'Mark as Incomplete' : 'Mark as Complete';
+                toggleButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            ${task.completed ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'}
+                                          </svg>`;
+                toggleButton.addEventListener('click', () => {
+                    // Find the task by ID and toggle its completed status
+                    const taskIndex = allTasks.findIndex(t => t.id === task.id);
+                    if (taskIndex !== -1) {
+                        allTasks[taskIndex].completed = !allTasks[taskIndex].completed;
+                        renderTasks(); // Re-render the list after updating
+                    }
+                });
+
+                // Delete button
+                const deleteButton = document.createElement('button');
+                deleteButton.className = `p-2 rounded-full bg-red-500 hover:bg-red-600 text-white transition duration-200 transform hover:scale-110`;
+                deleteButton.title = 'Delete Task';
+                deleteButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                          </svg>`;
+                deleteButton.addEventListener('click', () => {
+                    showConfirmationModal("Are you sure you want to delete this task?", (confirmed) => {
+                        if (confirmed) {
+                            // Filter out the task to be deleted
+                            allTasks = allTasks.filter(t => t.id !== task.id);
+                            renderTasks(); // Re-render the list after deleting
+                        }
+                    });
+                });
+
+                actionsDiv.appendChild(editButton);
+                actionsDiv.appendChild(toggleButton);
+                actionsDiv.appendChild(deleteButton);
+
+                taskItem.appendChild(taskTextElement);
+                taskItem.appendChild(actionsDiv);
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        // Event listeners for filter buttons
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('bg-indigo-500', 'dark:bg-indigo-600', 'text-white', 'shadow-md');
+                    btn.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-200', 'dark:hover:bg-gray-600');
+                });
+
+                // Add active class to the clicked button
+                button.classList.add('bg-indigo-500', 'dark:bg-indigo-600', 'text-white', 'shadow-md');
+                button.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-200', 'dark:hover:bg-gray-600');
+
+                currentFilter = button.id.replace('filter', '').toLowerCase();
+                renderTasks(); // Re-render with the new filter
+            });
+        });
+
+        // Event listener for Clear Completed button
+        clearCompletedButton.addEventListener('click', () => {
+            showConfirmationModal("Are you sure you want to delete ALL completed tasks?", (confirmed) => {
+                if (confirmed) {
+                    const completedTasksCount = allTasks.filter(task => task.completed).length;
+                    if (completedTasksCount === 0) {
+                        showConfirmationModal("No completed tasks to clear!", (confirmed) => {});
+                        return;
+                    }
+
+                    allTasks = allTasks.filter(task => !task.completed); // Keep only uncompleted tasks
+                    renderTasks(); // Re-render after clearing
+                    showConfirmationModal("All completed tasks cleared!", (confirmed) => {});
+                }
+            });
+        });
+
+        // Event listeners for Edit Task Modal
+        saveEditButton.addEventListener('click', () => {
+            const newText = editTaskInput.value.trim();
+            if (newText === "") {
+                showConfirmationModal("Task text cannot be empty!", (confirmed) => {});
+                return;
+            }
+            if (!currentEditTaskId) {
+                showConfirmationModal("Error: No task selected for editing.", (confirmed) => {});
+                return;
+            }
+
+            // Find the task by ID and update its text
+            const taskIndex = allTasks.findIndex(task => task.id === currentEditTaskId);
+            if (taskIndex !== -1) {
+                allTasks[taskIndex].text = newText;
+                renderTasks(); // Re-render after saving
+            }
+
+            // Animate modal out
+            editTaskModal.querySelector('div').classList.remove('scale-100', 'opacity-100');
+            editTaskModal.querySelector('div').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                editTaskModal.classList.add('hidden');
+                currentEditTaskId = null; // Reset
+            }, 300);
+        });
+
+        cancelEditButton.addEventListener('click', () => {
+            // Animate modal out
+            editTaskModal.querySelector('div').classList.remove('scale-100', 'opacity-100');
+            editTaskModal.querySelector('div').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                editTaskModal.classList.add('hidden');
+                currentEditTaskId = null; // Reset
+            }, 300);
+        });
+
+        // Event listener for New Quote button
+        newQuoteButton.addEventListener('click', displayRandomQuote);
+
+        // Event listener for Theme Toggle button
+        themeToggle.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                applyTheme('light');
+            } else {
+                applyTheme('dark');
+            }
+        });
+    </script>
+</body>
+</html>
